@@ -10,6 +10,9 @@ export class CussService {
   baseURL = "http://localhost:22222";
   cuss_env: any = null;
   socket: any = null;
+  /**
+   * Help to track how many components to query
+   */
   queryPending = [];
   /**
    * Events subscriptions coming from CUSS Platform
@@ -22,11 +25,17 @@ export class CussService {
   /**
    * Components Subscription triggers when components data is received from CUSS Platform
    */
-  components_received: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  components$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  components_received: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
+    false
+  );
   /**
    * Environment Subscription triggers when the environment data is received from CUSS Platform
    */
-  environment_received: BehaviorSubject<{}> = new BehaviorSubject<{}>({});
+  environment$: BehaviorSubject<{}> = new BehaviorSubject<{}>({});
+  environment_received: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
+    false
+  );
   /**
    * Subcription tiggres when all compenet queries are received from CUSS Platform
    */
@@ -55,7 +64,11 @@ export class CussService {
         client_id: "F9",
         client_secret: "6ab6323f-6212-40ca-bee7-a5f8dfebcf71"
       })
-      .toPromise();
+      .toPromise()
+      .then((res: any) => {
+        this.token = res.access_token;
+        return true;
+      });
   }
 
   /**
@@ -86,6 +99,27 @@ export class CussService {
         this.cuss_events.next(JSON.parse(evnt.data));
         rs("");
       });
+    });
+  }
+
+  /**
+   * Creating a handler for the events coming from the cuss platform
+   */
+  setMessageHandler() {
+    this.cuss_events.subscribe((ev: any) => {
+      console.log("CUSS", ev);
+      if (ev.functionName === "environment") {
+        this.environment$.next(ev.environmentLevel);
+        this.environment_received.next(true);
+      }
+      if (ev.functionName === "components") {
+        this.queryPending = ev.componentList.map((d) => d.id);
+        this.components$.next(ev.componentList);
+        this.components_received.next(true);
+      }
+      if (ev.functionName === "query") {
+        this.updateDeviceState(ev);
+      }
     });
   }
 
@@ -121,21 +155,18 @@ export class CussService {
       .toPromise();
   }
 
-  /**
-   * Creating a handler for the events coming from the cuss platform
-   */
-  setMessageHandler() {
-    this.cuss_events.subscribe((ev: any) => {
-      console.log("CUSS", ev);
-      if (ev.functionName === "environment") {
-        this.environment_received.next(ev.environmentLevel);
-      }
-      if (ev.functionName === "components") {
-        this.components_received.next(ev.componentList);
-      }
-      if (ev.functionName === "query") {
-        this.updateDeviceState(ev);
-      }
+  queryComponents() {
+    const calls = [];
+    this.components_received.getValue().forEach((c) => {
+      const url = `${this.baseURL}/peripherals/query/${c.componentID}`;
+      console.log("URL", url);
+      calls.push(
+        this.http
+          .get(url, {
+            headers: this.getOauthHeader()
+          })
+          .toPromise()
+      );
     });
   }
 
@@ -157,4 +188,9 @@ export class CussService {
       this.query_completed.next(true);
     }
   }
+
+  /**
+   *
+   */
+  findRequiredDevices(requiredDevices) {}
 }

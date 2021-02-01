@@ -10,24 +10,10 @@ import { CussService } from "./services/cuss.service";
   styleUrls: ["./app.component.css"]
 })
 export class AppComponent implements OnInit, OnDestroy {
-  token: string = null;
-  baseURL = "http://localhost:22222";
-  cuss_env: any = null;
-  socket: any = null;
-
-  cuss_events: BehaviorSubject<any> = new BehaviorSubject<any>({});
-  close_socket: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  components_received: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
-  query_completed: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
-    false
-  );
-  app_ready: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  app_failed: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-
-  environmentData: any = null;
-  components: any[];
+  environmentData$ = this.cussService.environment_received;
+  components$ = this.cussService.components_received;
   alive: boolean = true;
-  queryPending = [];
+
   requiredDevices = [
     { name: "barcodeReader", found: false, status: false },
     { name: "boardingPassPrinter", found: false, status: false },
@@ -40,114 +26,34 @@ export class AppComponent implements OnInit, OnDestroy {
     /**
      * CUSS 2.0 Sequence
      */
-
     // get token
-    // const { access_token } = await this.cussService.getToken();
-    // this.token = access_token;
+    await this.cussService.getToken();
 
     // stablish listener
     // TODO - Update token sending flow
-    // await this.cussService.getListener();
-
+    await this.cussService.getListener();
     // listen for CUSS Events
-    //this.setMessageHandler();
-
+    this.cussService.setMessageHandler();
     // get environment
-    // await this.getEnvironment();
-
+    await this.cussService.getEnvironment();
     // query all devices after receiving components
-    this.components_received
+    this.components$
       .pipe(takeWhile(() => this.alive))
       .subscribe(async (list: any) => {
-        this.components = list;
-        this.queryPending = list.map((d) => d.id);
-        await this.queryComponents();
+        await this.cussService.queryComponents();
       });
-
-    // get components
-    // await this.getComponents();
-
     // find required devices
-    this.query_completed
+    this.cussService.query_completed
       .pipe(takeWhile(() => this.alive))
       .subscribe((completed) => {
         if (completed) {
           console.log("Query Completed");
-          this.findRequiredDevices();
+          this.cussService.findRequiredDevices(this.requiredDevices);
         }
       });
+    // get components
+    await this.cussService.getComponents();
   }
-
-  setMessageHandler() {
-    this.cuss_events.pipe(takeWhile(() => this.alive)).subscribe((ev: any) => {
-      console.log("CUSS", ev);
-      if (ev.functionName === "environment") {
-        this.environmentData = ev.environmentLevel;
-      }
-      if (ev.functionName === "components") {
-        this.components_received.next(ev.componentList);
-      }
-      if (ev.functionName === "query") {
-        this.updateDeviceState(ev);
-      }
-    });
-  }
-
-  getEnvironment(): any {
-    return this.http
-      .get(`${this.baseURL}/platform/environment`, {
-        headers: this.getOauthHeader()
-      })
-      .toPromise();
-  }
-
-  getComponents(): any {
-    return this.http
-      .get(`${this.baseURL}/platform/components`, {
-        headers: this.getOauthHeader()
-      })
-      .toPromise();
-  }
-
-  getOauthHeader() {
-    return new HttpHeaders({
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${this.token}`
-    });
-  }
-
-  queryComponents() {
-    const calls = [];
-    this.components.forEach((c) => {
-      const url = `${this.baseURL}/peripherals/query/${c.componentID}`;
-      console.log("URL", url);
-      calls.push(
-        this.http
-          .get(url, {
-            headers: this.getOauthHeader()
-          })
-          .toPromise()
-      );
-    });
-    // Promise.all(calls).then((res) => {
-    //   console.log("Devices Res", res);
-    // });
-  }
-
-  updateDeviceState(ev) {
-    const found = this.components.find((c) => c.componentID === ev.componentID);
-    if (found) {
-      found["statusCode"] = ev.statusCode;
-      found["eventCode"] = ev.eventCode;
-      console.log("new Device", found);
-      this.queryPending.splice(this.queryPending.indexOf(found.id), 1);
-    }
-    if (this.queryPending.length === 0) {
-      this.query_completed.next(true);
-    }
-  }
-
-  findRequiredDevices() {}
 
   ngOnDestroy() {
     this.alive = false;
