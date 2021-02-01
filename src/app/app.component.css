@@ -1,0 +1,48 @@
+div {
+  text-align: center;
+}
+
+ul {
+  width: 280px;
+  text-align: left;
+}
+
+li {
+  height: 35px;
+  line-height: 25px;
+}
+
+.parent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+}
+
+.status {
+  width: 25px;
+  height: 25px;
+  background-color: grey;
+  display: inline-flex;
+  border-radius: 50%;
+}
+
+.devices {
+  display: flex;
+  align-content: center;
+  justify-content: space-between;
+}
+
+.good {
+  background-color: green;
+}
+
+.good-text {
+  color: green;
+  font-weight: bold;
+}
+
+.bad {
+  background-color: red;
+}
