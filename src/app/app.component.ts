@@ -11,7 +11,7 @@ import { CussService } from "./services/cuss.service";
 })
 export class AppComponent implements OnInit, OnDestroy {
   environmentData$ = this.cussService.environment_received;
-  components$ = this.cussService.components_received;
+  components$ = this.cussService.components$;
   alive: boolean = true;
 
   requiredDevices = [
