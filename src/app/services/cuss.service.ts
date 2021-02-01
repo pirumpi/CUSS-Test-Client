@@ -157,7 +157,7 @@ export class CussService {
 
   queryComponents() {
     const calls = [];
-    this.components_received.getValue().forEach((c) => {
+    this.components$.getValue().forEach((c) => {
       const url = `${this.baseURL}/peripherals/query/${c.componentID}`;
       console.log("URL", url);
       calls.push(
@@ -175,7 +175,7 @@ export class CussService {
    * @param ev CUSSEvent events coming from cuss platform
    */
   updateDeviceState(ev) {
-    const found = this.components_received
+    const found = this.components$
       .getValue()
       .find((c) => c.componentID === ev.componentID);
     if (found) {
