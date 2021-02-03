@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { BehaviorSubject } from "rxjs";
 import { takeWhile } from "rxjs/operators";
 import { CussService } from "./services/cuss.service";
@@ -20,7 +19,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { name: "bagtagPrinter", found: false, status: false }
   ];
 
-  constructor(private http: HttpClient, private cussService: CussService) {}
+  constructor(private cussService: CussService) {}
 
   async ngOnInit() {
     /**
