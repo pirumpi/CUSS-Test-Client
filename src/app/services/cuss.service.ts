@@ -1,6 +1,9 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { BehaviorSubject } from "rxjs";
+import { EnvironmentLevel } from "../interfaces/environmentLevel";
+import { PlatformData } from "../interfaces/platformData";
+import { EnvironmentComponent } from "../interfaces/environmentComponent";
 
 @Injectable({
   providedIn: "root"
@@ -17,7 +20,9 @@ export class CussService {
   /**
    * Events subscriptions coming from CUSS Platform
    */
-  cuss_events: BehaviorSubject<any> = new BehaviorSubject<any>({});
+  cuss_events: BehaviorSubject<PlatformData> = new BehaviorSubject<
+    PlatformData
+  >({});
   /**
    * CUSS Websocket connection got disconnected
    */
@@ -25,14 +30,16 @@ export class CussService {
   /**
    * Components Subscription triggers when components data is received from CUSS Platform
    */
-  components$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  components$: BehaviorSubject<EnvironmentComponent[]> = new BehaviorSubject<EnvironmentComponent[]>([]);
   components_received: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
     false
   );
   /**
    * Environment Subscription triggers when the environment data is received from CUSS Platform
    */
-  environment$: BehaviorSubject<{}> = new BehaviorSubject<{}>({});
+  environment$: BehaviorSubject<EnvironmentLevel> = new BehaviorSubject<
+    EnvironmentLevel
+  >({});
   environment_received: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
     false
   );
@@ -96,7 +103,7 @@ export class CussService {
       });
       this.socket.addEventListener("message", (evnt: any) => {
         //console.log("Socket data", evnt);
-        this.cuss_events.next(JSON.parse(evnt.data));
+        this.cuss_events.next(JSON.parse(evnt.data) as PlatformData);
         rs("");
       });
     });
@@ -106,13 +113,15 @@ export class CussService {
    * Creating a handler for the events coming from the cuss platform
    */
   setMessageHandler() {
-    this.cuss_events.subscribe((ev: any) => {
+    this.cuss_events.subscribe((ev: PlatformData) => {
       console.log("CUSS", ev);
       if (ev.functionName === "environment") {
         this.environment$.next(ev.environmentLevel);
+        console.log("Environment", ev.environmentLevel);
         this.environment_received.next(true);
       }
       if (ev.functionName === "components") {
+        // keep a list of all available components ids
         this.queryPending = ev.componentList.map((d) => d.id);
         this.components$.next(ev.componentList);
         this.components_received.next(true);
@@ -155,6 +164,9 @@ export class CussService {
       .toPromise();
   }
 
+  /**
+   * Query all the components returned from the get component call
+   */
   queryComponents() {
     const calls = [];
     this.components$.getValue().forEach((c) => {

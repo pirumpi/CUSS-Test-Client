@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { takeWhile } from "rxjs/operators";
 import { CussService } from "./services/cuss.service";
+import { RequiredDevices } from "./interfaces/requiredDevices";
+import { EnvironmentComponent } from "./interfaces/environmentComponent";
 
 @Component({
   selector: "app-root",
@@ -9,11 +11,14 @@ import { CussService } from "./services/cuss.service";
   styleUrls: ["./app.component.css"]
 })
 export class AppComponent implements OnInit, OnDestroy {
-  environmentData$ = this.cussService.environment_received;
-  components$ = this.cussService.components$;
+  environmentData$: BehaviorSubject<boolean> = this.cussService
+    .environment_received;
+  components$: BehaviorSubject<EnvironmentComponent[]> = this.cussService
+    .components$;
+  query_completed: BehaviorSubject<boolean> = this.cussService.query_completed;
   alive: boolean = true;
 
-  requiredDevices = [
+  requiredDevices: RequiredDevices[] = [
     { name: "barcodeReader", found: false, status: false },
     { name: "boardingPassPrinter", found: false, status: false },
     { name: "bagtagPrinter", found: false, status: false }
