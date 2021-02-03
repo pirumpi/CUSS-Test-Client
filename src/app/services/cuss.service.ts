@@ -204,5 +204,9 @@ export class CussService {
   /**
    *
    */
-  findRequiredDevices(requiredDevices) {}
+  findRequiredDevices(requiredDevices) {
+    console.log(requiredDevices)
+  }
+
+  
 }

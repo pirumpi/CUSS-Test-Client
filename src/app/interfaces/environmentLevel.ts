@@ -18,11 +18,11 @@ export interface EnvironmentLevel {
     /**
      * Session Timeout (in milliseconds) for active applications
      */
-    sessionTimeout: number;
+    sessionTimeout?: number;
     /**
      * Time (in milliseconds) left before an application is killed
      */
-    killTimeout: number;
+    killTimeout?: number;
     /**
      * Time for application initialization (in milliseconds)
      */
@@ -30,22 +30,22 @@ export interface EnvironmentLevel {
     /**
      * The unique identifier of the device/touchpoint as configured by the operator.
      */
-    deviceID: string;
-    deviceLocation: Location;
+    deviceID?: string;
+    deviceLocation?: Location;
     /**
      * Supported versions of the CUSS specifications.
      */
-    cussVersions: Array<string>;
+    cussVersions?: Array<string>;
     /**
      * Supported versions of the CUSS API definitions.
      */
-    cussInterfaceVersions: Array<string>;
+    cussInterfaceVersions?: Array<string>;
     /**
      * Name of the installed operating system
      */
-    osName: string;
+    osName?: string;
     /**
      * Version of the installed operating system
      */
-    osVersion: string;
+    osVersion?: string;
 }
