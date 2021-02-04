@@ -62,6 +62,12 @@ const isValidStatusCode = (statusCode: StatusCodes): boolean => {
     // TBD
     return false;
 };
+const updateObject = (comp: RequiredDevices, filterFnc, list: EnvironmentComponent[]) => {
+    const found = list.find(c => filterFnc(c));
+    if (found) {
+        comp.found, comp.status= isValidEventCode(found.eventCode) && isValidStatusCode(found.statusCode);
+    }
+};
 
 /**
  * 
@@ -86,15 +92,7 @@ const findComponents = (comp: RequiredDevices, list: EnvironmentComponent[]) => 
         case ComponentName.DISPLAY:
             updateObject(comp, isDisplay, list);
             break;
-
     }
 }
-
-const updateObject = (comp: RequiredDevices, filterFnc, list: EnvironmentComponent[]) => {
-    const found = list.find(c => filterFnc(c));
-    if (found) {
-        comp.found, comp.status= isValidEventCode(found.eventCode) && isValidStatusCode(found.statusCode);
-    }
-};
 
 
