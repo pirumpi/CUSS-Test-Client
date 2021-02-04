@@ -4,6 +4,7 @@ import { takeWhile } from "rxjs/operators";
 import { CussService } from "./services/cuss.service";
 import { RequiredDevices } from "./interfaces/requiredDevices";
 import { EnvironmentComponent } from "./interfaces/environmentComponent";
+import { ComponentName } from './interfaces/componentNames';
 
 @Component({
   selector: "app-root",
@@ -19,9 +20,9 @@ export class AppComponent implements OnInit, OnDestroy {
   alive: boolean = true;
 
   requiredDevices: RequiredDevices[] = [
-    { name: "barcodeReader", found: false, status: false },
-    { name: "boardingPassPrinter", found: false, status: false },
-    { name: "bagtagPrinter", found: false, status: false }
+    { name: ComponentName.BARCODE_READER, found: false, status: false },
+    { name: ComponentName.BAGTAG_PRINTER, found: false, status: false },
+    { name: ComponentName.BOARDINGPASS_PRINTER, found: false, status: false }
   ];
 
   constructor(private cussService: CussService) {}

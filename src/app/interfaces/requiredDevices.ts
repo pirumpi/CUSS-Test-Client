@@ -1,5 +1,6 @@
+import { ComponentName } from './componentNames';
 export interface RequiredDevices {
-  name: string;
+  name: ComponentName;
   found: boolean; 
   status: boolean; 
 }
