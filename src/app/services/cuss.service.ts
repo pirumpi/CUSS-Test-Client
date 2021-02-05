@@ -4,6 +4,7 @@ import { BehaviorSubject } from "rxjs";
 import { EnvironmentLevel } from "../interfaces/environmentLevel";
 import { PlatformData } from "../interfaces/platformData";
 import { EnvironmentComponent } from "../interfaces/environmentComponent";
+import { componentFinder } from "./component-finder";
 
 @Injectable({
   providedIn: "root"
@@ -30,7 +31,9 @@ export class CussService {
   /**
    * Components Subscription triggers when components data is received from CUSS Platform
    */
-  components$: BehaviorSubject<EnvironmentComponent[]> = new BehaviorSubject<EnvironmentComponent[]>([]);
+  components$: BehaviorSubject<EnvironmentComponent[]> = new BehaviorSubject<
+    EnvironmentComponent[]
+  >([]);
   components_received: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
     false
   );
@@ -205,8 +208,7 @@ export class CussService {
    *
    */
   findRequiredDevices(requiredDevices) {
-    console.log(requiredDevices)
+    console.log(requiredDevices);
+    componentFinder(requiredDevices, this.components$.getValue());
   }
-
-  
 }
