@@ -1,98 +1,149 @@
 import { EnvironmentComponent } from "../interfaces/environmentComponent";
-import { RequiredDevices } from '../interfaces/requiredDevices';
-import { ComponentName } from '../interfaces/componentNames';
-import { EventCodes } from '../interfaces/eventCodes';
-import { StatusCodes } from '../interfaces/statusCodes';
+import { RequiredDevices } from "../interfaces/requiredDevices";
+import { ComponentName } from "../interfaces/componentNames";
+import { EventCodes } from "../interfaces/eventCodes";
+import { StatusCodes } from "../interfaces/statusCodes";
+import { ReaderTypes } from "../interfaces/readerTypes";
+import { ComponentTypes, DataTypes, MediaTypes } from "../interfaces/models";
 
 /**
  * Find a barcode reader by component's characteristics
  * @param comp Component device
  */
 export const isBarcodeReader = (comp: EnvironmentComponent): boolean => {
-    // TBD
-    return false;
+  const charac = comp.componentCharacteristics[0];
+  if (charac && charac.dsTypesList.find((d) => d === DataTypes.BARCODE)) {
+    return true;
+  }
+  return false;
 };
 /**
  * Find a bbagtag printer by component's characteristics
  * @param comp Component device
  */
 export const isBagtagPrinter = (comp: EnvironmentComponent): boolean => {
-    // TBD
-    return false;
+  const charac = comp.componentCharacteristics[0];
+  if (
+    charac &&
+    charac.mediaTypesList.find((m) => m === MediaTypes.BaggageTag)
+  ) {
+    return true;
+  }
+  return false;
 };
 /**
  * Find a boardingpass printer by component's characteristics
  * @param comp Component device
  */
 export const isBoardingpassPrinter = (comp: EnvironmentComponent): boolean => {
-    // TBD
-    return false;
+  const charac = comp.componentCharacteristics[0];
+  if (
+    charac &&
+    charac.mediaTypesList.find((m) => m === MediaTypes.BaggageTag)
+  ) {
+    return true;
+  }
+  return false;
 };
 /**
  * Find a passport reader by component's characteristics
  * @param comp Component device
  */
 export const isPassportReader = (comp: EnvironmentComponent): boolean => {
-    // TBD
-    return false;
+  const charac = comp.componentCharacteristics[0];
+  if (
+    charac &&
+    charac.dsTypesList.find((d) => d === DataTypes.CODELINE) &&
+    charac.readerType === ReaderTypes.FlatbedScan
+  ) {
+    return true;
+  }
+  return false;
 };
 /**
  * Find a display by component's characteristics
  * @param comp Component device
  */
 export const isDisplay = (comp: EnvironmentComponent): boolean => {
-    // TBD
-    return false;
+  if (comp.componentType === ComponentTypes.DISPLAY) {
+    return true;
+  }
+  return false;
 };
-
 /**
- * 
- * @param comps Component Device
- * @param list Available components in the cuss platform
+ * Find a display by component's characteristics
+ * @param comp Component device
  */
-export const componentFinder = (comps: RequiredDevices[], list: EnvironmentComponent[]) => {
-    comps.forEach(comp => findComponents(comp, list));
+export const isAnnouncement = (comp: EnvironmentComponent): boolean => {
+  if (comp.componentType === ComponentTypes.ANNOUNCEMENT) {
+    return true;
+  }
+  return false;
 };
 
 const isValidEventCode = (eventCode: EventCodes): boolean => {
-    // TBD
-    return false;
+  const valids = [
+    EventCodes.ECOK,
+    EventCodes.EVENTHANDLINGREADY,
+    EventCodes.READYRELEASEDAPPLICATION,
+    EventCodes.RELEASEDREADY
+  ];
+  return valids.indexOf(eventCode) >= 0;
 };
 const isValidStatusCode = (statusCode: StatusCodes): boolean => {
-    // TBD
-    return false;
+  return statusCode === StatusCodes.OK;
 };
-const updateObject = (comp: RequiredDevices, filterFnc, list: EnvironmentComponent[]) => {
-    const found = list.find(c => filterFnc(c));
-    if (found) {
-        comp.found, comp.status= isValidEventCode(found.eventCode) && isValidStatusCode(found.statusCode);
-    }
+
+const updateObject = (
+  comp: RequiredDevices,
+  filterFnc,
+  list: EnvironmentComponent[]
+) => {
+  const found = list.find((c) => filterFnc(c));
+  if (found) {
+    const val =
+      isValidEventCode(found.eventCode) && isValidStatusCode(found.statusCode);
+    comp.found = val;
+    comp.status = val;
+  }
 };
 
 /**
- * 
+ *
  * @param comp Components required by the cuss application
  * @param list List of available components in the cuss platform
  */
-const findComponents = (comp: RequiredDevices, list: EnvironmentComponent[]) => {
+const findComponents = (
+  comp: RequiredDevices,
+  list: EnvironmentComponent[]
+) => {
+  switch (comp.name) {
+    case ComponentName.BAGTAG_PRINTER:
+      updateObject(comp, isBagtagPrinter, list);
+      break;
+    case ComponentName.BARCODE_READER:
+      updateObject(comp, isBarcodeReader, list);
+      break;
+    case ComponentName.BOARDINGPASS_PRINTER:
+      updateObject(comp, isBoardingpassPrinter, list);
+      break;
+    case ComponentName.PASSPORT_READER:
+      updateObject(comp, isPassportReader, list);
+      break;
+    case ComponentName.DISPLAY:
+      updateObject(comp, isDisplay, list);
+      break;
+  }
+};
 
-    switch (comp.name) {
-        case ComponentName.BAGTAG_PRINTER:
-            updateObject(comp, isBagtagPrinter, list);
-            break;
-        case ComponentName.BARCODE_READER:
-            updateObject(comp, isBarcodeReader, list);
-            break;
-        case ComponentName.BOARDINGPASS_PRINTER:
-            updateObject(comp, isBoardingpassPrinter, list);
-            break;
-        case ComponentName.PASSPORT_READER:
-            updateObject(comp, isPassportReader, list);
-            break;
-        case ComponentName.DISPLAY:
-            updateObject(comp, isDisplay, list);
-            break;
-    }
-}
-
-
+/**
+ *
+ * @param comps Component Device
+ * @param list Available components in the cuss platform
+ */
+export const componentFinder = (
+  comps: RequiredDevices[],
+  list: EnvironmentComponent[]
+) => {
+  comps.forEach((comp) => findComponents(comp, list));
+};
