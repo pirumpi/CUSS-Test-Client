@@ -4,7 +4,7 @@ import { takeWhile } from "rxjs/operators";
 import { CussService } from "./services/cuss.service";
 import { RequiredDevices } from "./interfaces/requiredDevices";
 import { EnvironmentComponent } from "./interfaces/environmentComponent";
-import { ComponentName } from './interfaces/componentNames';
+import { ComponentName } from "./interfaces/componentNames";
 
 @Component({
   selector: "app-root",
@@ -17,6 +17,7 @@ export class AppComponent implements OnInit, OnDestroy {
   components$: BehaviorSubject<EnvironmentComponent[]> = this.cussService
     .components$;
   query_completed: BehaviorSubject<boolean> = this.cussService.query_completed;
+  token$: BehaviorSubject<boolean> = this.cussService.token_received;
   alive: boolean = true;
 
   requiredDevices: RequiredDevices[] = [

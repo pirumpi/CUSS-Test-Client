@@ -5,8 +5,10 @@
       CUSS 2.0 Initiation calls
     </h4>
     <ul>
-      <!-- <li *ngIf="token">Acquiring token: <b>{{token.substr(0,5)}}</b></li>
-      <li *ngIf="socket">Listener <span class="good-text">Stablished</span></li> -->
+      <li *ngIf="token$ | async">
+        Acquiring token: <b>{{token$.substr(0,5)}}</b>
+      </li>
+      <!--<li *ngIf="socket">Listener <span class="good-text">Stablished</span></li> -->
       <li *ngIf="environmentData$ | async">
         Environment <span class="good-text">Received</span>
       </li>

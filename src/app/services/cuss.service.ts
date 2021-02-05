@@ -10,10 +10,15 @@ import { componentFinder } from "./component-finder";
   providedIn: "root"
 })
 export class CussService {
-  token: string = null;
   baseURL = "http://localhost:22222";
   cuss_env: any = null;
   socket: any = null;
+
+  /**
+   * Help track the retriving of the authentication token
+   */
+  token_received: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  token: BehaviorSubject<string> = new BehaviorSubject<string>(null);
   /**
    * Help to track how many components to query
    */
@@ -76,7 +81,9 @@ export class CussService {
       })
       .toPromise()
       .then((res: any) => {
-        this.token = res.access_token;
+        this.token.next(res.access_token);
+        this.token_received.next(true);
+
         return true;
       });
   }
@@ -88,7 +95,7 @@ export class CussService {
   getListener() {
     return new Promise((rs, rj) => {
       this.socket = new WebSocket(
-        `ws://localhost:22222/subscribe?access_token=${this.token}`
+        `ws://localhost:22222/subscribe?access_token=${this.token.getValue()}`
       );
       this.socket.addEventListener("open", () => {
         console.log("Socket open");
@@ -141,7 +148,7 @@ export class CussService {
   getOauthHeader() {
     return new HttpHeaders({
       "Content-Type": "application/json",
-      Authorization: `Bearer ${this.token}`
+      Authorization: `Bearer ${this.token.getValue()}`
     });
   }
 
