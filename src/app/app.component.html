@@ -6,15 +6,19 @@
     </h4>
     <ul>
       <li *ngIf="token$ | async">
-        Acquiring token: <b>{{token$.substr(0,5)}}</b>
+        Token: <span class="good-text">Acquired</span>
       </li>
-      <!--<li *ngIf="socket">Listener <span class="good-text">Stablished</span></li> -->
+      <li *ngIf="listener_created$ | async">
+        Listener <span class="good-text">Stablished</span>
+      </li>
       <li *ngIf="environmentData$ | async">
         Environment <span class="good-text">Received</span>
       </li>
-      <li *ngIf="components$ |async">
-        Components Received
-        <span class="good-text">{{components$.length}}</span>
+      <li *ngIf="components$ | async">
+        Components
+        <span class="good-text">
+          Received <b>{{components$.getValue().length}}</b>
+        </span>
       </li>
     </ul>
   </div>
@@ -48,5 +52,13 @@
         <span class="status" [ngClass]="{'good': comp.found }"></span>
       </li>
     </ul>
+  </div>
+  <div *ngIf="validation_completed | async">
+    <h4>
+      Application State
+    </h4>
+    <span *ngIf="available | async" class="good-text">Available</span>
+    <span *ngIf="unavailable | async" class="bad-text">UnAvailable</span>
+    <span *ngIf="wrongstate | async" class="bad-text">Wrong State</span>
   </div>
 </div>

@@ -5,6 +5,7 @@ import { CussService } from "./services/cuss.service";
 import { RequiredDevices } from "./interfaces/requiredDevices";
 import { EnvironmentComponent } from "./interfaces/environmentComponent";
 import { ComponentName } from "./interfaces/componentNames";
+import { ApplicationStates } from "./interfaces/models";
 
 @Component({
   selector: "app-root",
@@ -18,7 +19,19 @@ export class AppComponent implements OnInit, OnDestroy {
     .components$;
   query_completed: BehaviorSubject<boolean> = this.cussService.query_completed;
   token$: BehaviorSubject<boolean> = this.cussService.token_received;
+  listener_created$: BehaviorSubject<boolean> = this.cussService
+    .listener_created;
+  component_validation_completed: BehaviorSubject<boolean> = this.cussService
+    .component_validation_completed;
   alive: boolean = true;
+  validation_completed: BehaviorSubject<boolean> = this.cussService
+    .component_validation_completed;
+  available: BehaviorSubject<boolean> = this.cussService
+    .available_event_received;
+  unavailable: BehaviorSubject<boolean> = this.cussService
+    .unavailable_event_received;
+  wrongstate: BehaviorSubject<boolean> = this.cussService
+    .wrong_state_event_received;
 
   requiredDevices: RequiredDevices[] = [
     { name: ComponentName.BARCODE_READER, found: false, status: false },
@@ -48,12 +61,43 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(async (list: any) => {
         await this.cussService.queryComponents();
       });
-    // find required devices
+    // all component verification completed
+    this.component_validation_completed
+      .pipe(takeWhile(() => this.alive))
+      .subscribe((done) => {
+        // all components were found and available
+        if (done) {
+          console.log("Application moving to an available state");
+          if (
+            !this.requiredDevices.filter((d) => !d.status || !d.found).length
+          ) {
+            this.cussService.stateRequest(ApplicationStates.AVAILABLE, {
+              applicationBrand: "",
+              executionMode: "MAM",
+              accessibleMode: false,
+              executionOptions: "",
+              languageID: "en-US",
+              transferData: ""
+            });
+          } else {
+            this.cussService.stateRequest(ApplicationStates.UNAVAILABLE, {
+              applicationBrand: "",
+              executionMode: "MAM",
+              accessibleMode: false,
+              executionOptions: "",
+              languageID: "en-US",
+              transferData: ""
+            });
+          }
+        }
+      });
+    // wait for the query process to be completed
     this.cussService.query_completed
       .pipe(takeWhile(() => this.alive))
       .subscribe((completed) => {
         if (completed) {
           console.log("Query Completed");
+          // find required devices
           this.cussService.findRequiredDevices(this.requiredDevices);
         }
       });

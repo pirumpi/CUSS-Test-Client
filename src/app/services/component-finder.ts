@@ -137,7 +137,7 @@ const findComponents = (
 };
 
 /**
- *
+ * Find all the application required components and check the availability of each.
  * @param comps Component Device
  * @param list Available components in the cuss platform
  */
@@ -145,5 +145,12 @@ export const componentFinder = (
   comps: RequiredDevices[],
   list: EnvironmentComponent[]
 ) => {
-  comps.forEach((comp) => findComponents(comp, list));
+  return new Promise((rs, rj) => {
+    try {
+      comps.forEach((comp) => findComponents(comp, list));
+      return rs(true);
+    } catch (err) {
+      rj(err);
+    }
+  });
 };

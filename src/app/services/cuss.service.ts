@@ -5,12 +5,15 @@ import { EnvironmentLevel } from "../interfaces/environmentLevel";
 import { PlatformData } from "../interfaces/platformData";
 import { EnvironmentComponent } from "../interfaces/environmentComponent";
 import { componentFinder } from "./component-finder";
+import { ApplicationActivation } from "../interfaces/applicationActivation";
+import { ApplicationStates } from "../interfaces/models";
+import { environment } from "../../environments/environment";
 
 @Injectable({
   providedIn: "root"
 })
 export class CussService {
-  baseURL = "http://localhost:22222";
+  baseURL = environment.baseURL;
   cuss_env: any = null;
   socket: any = null;
 
@@ -23,6 +26,12 @@ export class CussService {
    * Help to track how many components to query
    */
   queryPending = [];
+  /**
+   * Event tracking when a listener is created
+   */
+  listener_created: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
+    false
+  );
   /**
    * Events subscriptions coming from CUSS Platform
    */
@@ -57,7 +66,48 @@ export class CussService {
   query_completed: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(
     false
   );
-
+  /**
+   * Subcription tiggres when all application required components are verified
+   */
+  component_validation_completed: BehaviorSubject<
+    boolean
+  > = new BehaviorSubject<boolean>(false);
+  /**
+   * Subject trigger when the available event gets returns from the cuss platform
+   */
+  available_event_received: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(false);
+  /**
+   * Subject trigger when the available event gets returns from the cuss platform
+   */
+  unavailable_event_received: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(false);
+  /**
+   * Subject trigger when the active event gets returns from the cuss platform
+   */
+  active_event_received: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(false);
+  /**
+   * Subject trigger when the stopped event gets returns from the cuss platform
+   */
+  stopped_event_received: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(false);
+  /**
+   * Subject trigger when the suspended event gets returns from the cuss platform
+   */
+  suspended_event_received: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(false);
+  /**
+   * Subject trigger when the wrong state event gets returns from the cuss platform
+   */
+  wrong_state_event_received: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(false);
   /**
    * Application is ready to move to AVAILABLE
    */
@@ -99,6 +149,7 @@ export class CussService {
       );
       this.socket.addEventListener("open", () => {
         console.log("Socket open");
+        this.listener_created.next(true);
         rs("");
       });
       this.socket.addEventListener("error", (err) => {
@@ -138,6 +189,12 @@ export class CussService {
       }
       if (ev.functionName === "query") {
         this.updateDeviceState(ev);
+      }
+      if (ev.currentApplicationState === ApplicationStates.AVAILABLE) {
+        this.available_event_received.next(true);
+      }
+      if (ev.currentApplicationState === ApplicationStates.UNAVAILABLE) {
+        this.unavailable_event_received.next(true);
       }
     });
   }
@@ -193,7 +250,24 @@ export class CussService {
   }
 
   /**
-   * Helper function to update device status after queries or device changes
+   * Request an application state transfer to the cuss platform
+   * @param state desire state from the application to the platform
+   * @param activation Application required state
+   */
+  stateRequest(state: ApplicationStates, activation: ApplicationActivation) {
+    return this.http
+      .post(
+        `${this.baseURL}/platform/applications/staterequest/${state}`,
+        activation,
+        {
+          headers: this.getOauthHeader()
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Update device status after queries or device changes and triggers the query_completed event when is done
    * @param ev CUSSEvent events coming from cuss platform
    */
   updateDeviceState(ev) {
@@ -212,10 +286,13 @@ export class CussService {
   }
 
   /**
-   *
+   * Check the availability of the required components and triggers the component_validation_completed when is done
+   * @param requiredDevices required components for the application
    */
   findRequiredDevices(requiredDevices) {
     console.log(requiredDevices);
-    componentFinder(requiredDevices, this.components$.getValue());
+    componentFinder(requiredDevices, this.components$.getValue()).finally(() =>
+      this.component_validation_completed.next(true)
+    );
   }
 }

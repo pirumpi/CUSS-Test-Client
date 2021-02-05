@@ -42,7 +42,10 @@ li {
   color: green;
   font-weight: bold;
 }
-
+.bad-text {
+  color: rgb(128, 0, 0);
+  font-weight: bold;
+}
 .bad {
   background-color: red;
 }
