@@ -61,6 +61,16 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(async (list: any) => {
         await this.cussService.queryComponents();
       });
+    // wait for the query process to be completed
+    this.cussService.query_completed
+      .pipe(takeWhile(() => this.alive))
+      .subscribe((completed) => {
+        if (completed) {
+          console.log("Query Completed");
+          // find required devices
+          this.cussService.findRequiredDevices(this.requiredDevices);
+        }
+      });
     // all component verification completed
     this.component_validation_completed
       .pipe(takeWhile(() => this.alive))
@@ -91,16 +101,7 @@ export class AppComponent implements OnInit, OnDestroy {
           }
         }
       });
-    // wait for the query process to be completed
-    this.cussService.query_completed
-      .pipe(takeWhile(() => this.alive))
-      .subscribe((completed) => {
-        if (completed) {
-          console.log("Query Completed");
-          // find required devices
-          this.cussService.findRequiredDevices(this.requiredDevices);
-        }
-      });
+
     // get components
     await this.cussService.getComponents();
   }
